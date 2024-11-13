@@ -2,66 +2,41 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
-	"log"
-	"os"
-	"os/signal"
-	"syscall"
+	"github.com/gin-contrib/cors"
 	"tauri-notes-ai/database"
 	"tauri-notes-ai/routes"
-	"tauri-notes-ai/setup"
+	"time"
 )
 
 func main() {
-	// POTENTIAL ISSUE: Need to handle environment configuration across platforms
-	if err := godotenv.Load(); err != nil {
-		log.Println("Warning: .env file not found")
-	}
-
-	// Initialize required directories
-	if err := setup.EnsureAppDirectories(); err != nil {
-		log.Fatal("Failed to create app directories:", err)
-	}
-
-	// Check AI models
-	if err := setup.CheckAIModels(); err != nil {
-		log.Fatal("AI models not properly installed:", err)
-	}
-
-	// Initialize database
+	// Initialize Database
 	database.InitDB()
 
-	// Setup Gin
+	// Initialize Gin with release mode
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
-	// POTENTIAL ISSUE: Need to configure CORS properly for Tauri
-	r.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Content-Type")
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-		c.Next()
+	// Configure CORS
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:1420", "tauri://localhost"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Type"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
+	// Health check
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
 	})
 
 	// Setup routes
-	routes.SetupRoutes(r)
-
-	// Graceful shutdown handling
-	// POTENTIAL ISSUE: Need to ensure all resources are properly cleaned up
-	go func() {
-		sigChan := make(chan os.Signal, 1)
-		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-		<-sigChan
-
-		// Cleanup code here
-		os.Exit(0)
-	}()
-
-	// POTENTIAL ISSUE: Need to handle port conflicts
-	if err := r.Run(":5000"); err != nil {
-		log.Fatal("Failed to start server:", err)
+	api := r.Group("/api")
+	{
+		routes.SetupAudioRoutes(api)
+		routes.SetupNoteRoutes(api)
 	}
+
+	r.Run(":8080")
 } 

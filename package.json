@@ -1,25 +1,56 @@
 {
-  "name": "tauri-app",
+  "name": "tauri-notes-ai",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:app": "tauri dev",
+    "dev:clean": "npm run kill && npm run dev:app",
     "build": "vite build",
-    "preview": "vite preview",
-    "tauri": "tauri",
-    "start": "concurrently --kill-others \"cd src-tauri/go-backend && go run main.go\" \"npm run tauri dev\""
+    "build:app": "tauri build",
+    "backend": "cd src-tauri/go-backend && go run main.go",
+    "backend:build": "cd src-tauri/go-backend && go build",
+    "kill": "kill-port 1420 1421 8080 || true",
+    "clean": "rimraf dist src-tauri/target",
+    "reset": "npm run kill && npm run clean && npm install",
+    "start": "npm run dev:clean",
+    "start:all": "concurrently --kill-others \"npm run backend\" \"npm run dev:app\"",
+    "test": "vitest",
+    "test:e2e": "playwright test",
+    "test:backend": "cd src-tauri/go-backend && go test ./...",
+    "test:all": "npm run test && npm run test:backend"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-shell": "^2",
+    "@radix-ui/react-select": "^2.1.2",
+    "@radix-ui/react-slot": "^1.1.0",
+    "@tauri-apps/api": "^2.0.3",
+    "@tauri-apps/cli": "^2.0.0",
+    "@tauri-apps/plugin-shell": "^2.0.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.454.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "tailwind-merge": "^2.5.4",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2",
+    "@playwright/test": "^1.42.1",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^14.3.1",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
     "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.20",
     "concurrently": "^7.6.0",
-    "vite": "^5.3.1"
+    "kill-port": "^2.0.1",
+    "postcss": "^8.4.47",
+    "rimraf": "^5.0.5",
+    "tailwindcss": "^3.4.14",
+    "vite": "^5.3.1",
+    "vitest": "^1.6.0"
   }
 }

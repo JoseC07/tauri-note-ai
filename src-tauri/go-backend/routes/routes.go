@@ -6,11 +6,10 @@ import (
 )
 
 func SetupRoutes(r *gin.Engine) {
-	// Notes routes
-	r.GET("/notes", controllers.GetNotes)
-	r.POST("/notes", controllers.CreateNote)
-	
-	// Audio routes
-	r.GET("/devices", controllers.ListAudioDevices)
-	r.POST("/audio/process", controllers.ProcessAudioWithPython)
+	api := r.Group("/api")
+	{
+		api.GET("/notes", controllers.GetNotes)
+		api.POST("/notes", controllers.CreateNote)
+		api.GET("/audio-devices", controllers.ListAudioDevices)
+	}
 } 
